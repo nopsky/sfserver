@@ -1,9 +1,11 @@
 package sfserver
 
 import (
+	"flag"
 	"fmt"
 	"github.com/vaughan0/go-ini"
 	"log"
+	"os"
 	"strings"
 	"syscall"
 )
@@ -29,11 +31,23 @@ type Config struct {
 
 const fsn = syscall.IN_CREATE | syscall.IN_MOVED_TO | syscall.IN_DELETE_SELF | syscall.IN_DELETE | syscall.IN_MODIFY | syscall.IN_MOVE_SELF | syscall.IN_MOVED_FROM
 
+var conf_ini = flag.String("conf", "config.ini", "配置文件路径")
+
 func NewConfig() *Config {
 
-	var config = &Config{Flags: fsn, Faillog: "/tmp/sfserver.log", Skipdir: make(map[string]int), Skipext: make(map[string]int)}
+	flag.Parse()
 
-	file, err := ini.LoadFile("config.ini")
+	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, "Usage of sudo %s\n", os.Args[0])
+		flag.PrintDefaults()
+		os.Exit(-1)
+	}
+
+	var config = &Config{Flags: fsn, Skipdir: make(map[string]int), Skipext: make(map[string]int)}
+
+	config.Faillog = "/tmp/sfserver.log"
+
+	file, err := ini.LoadFile(*conf_ini)
 	if err != nil {
 		log.Fatal(err)
 	}
