@@ -10,9 +10,9 @@ type watch struct {
 }
 
 type WatchMap struct {
-	lock    *sync.RWMutex    "结构读写锁"
-	watcher map[string]watch "path->wd的map结构"
-	paths   map[int]string   "wd->path的map结构"
+	lock    *sync.RWMutex    //"结构读写锁"
+	watcher map[string]watch //"path->wd的map结构"
+	paths   map[int]string   //"wd->path的map结构"
 }
 
 func newWatchMap() *WatchMap {

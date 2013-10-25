@@ -9,6 +9,7 @@ import (
 )
 
 type RsyncConfig struct {
+	bin           string
 	Params        string   ///usr/bin/rsync -avz --delete
 	Password_file string   //密码文件存放地址
 	User          string   //rsync指定的用户名
@@ -18,11 +19,11 @@ type RsyncConfig struct {
 }
 
 type Config struct {
-	Path    string   //监控路径
-	Flags   uint32   //监控的事件
-	Skipdir []string //指定不需要监控的目录
-	Skipext []string //指定不需要监控的文件后缀
-	Faillog string   //失败的日志文件
+	Path    string         //监控路径
+	Flags   uint32         //监控的事件
+	Skipdir map[string]int //指定不需要监控的目录
+	Skipext map[string]int //指定不需要监控的文件后缀
+	Faillog string         //失败的日志文件
 
 	RsyncConfig
 }
@@ -31,7 +32,7 @@ const fsn = syscall.IN_CREATE | syscall.IN_MOVED_TO | syscall.IN_DELETE_SELF | s
 
 func NewConfig() *Config {
 
-	var config = &Config{Flags: fsn, Faillog: "/tmp/sfserver.log"}
+	var config = &Config{Flags: fsn, Faillog: "/tmp/sfserver.log", Skipdir: make(map[string]int), Skipext: make(map[string]int)}
 
 	file, err := ini.LoadFile("config.ini")
 	if err != nil {
@@ -69,11 +70,18 @@ func NewConfig() *Config {
 
 		case "skipdir":
 			if value != "" {
-				config.Skipdir = strings.Split(value, ",")
+				skipdir := strings.Split(value, ",")
+				for _, dir := range skipdir {
+					fmt.Println("=====>", strings.TrimSpace(dir), "<======")
+					config.Skipdir[strings.TrimSpace(dir)] = 1
+				}
 			}
 		case "skipext":
 			if value != "" {
-				config.Skipext = strings.Split(value, ",")
+				skipext := strings.Split(value, ",")
+				for _, ext := range skipext {
+					config.Skipext[strings.TrimSpace(ext)] = 1
+				}
 			}
 
 		case "faillog":
@@ -88,6 +96,10 @@ func NewConfig() *Config {
 	for rkey, rvalue := range file["rsync"] {
 		//fmt.Println(rkey, "-->", rvalue)
 		switch rkey {
+		case "rsync.bin":
+			if rvalue != "" {
+				config.bin = rvalue
+			}
 		case "rsync.params":
 			if rvalue != "" {
 				config.Params = rvalue
@@ -103,6 +115,7 @@ func NewConfig() *Config {
 		case "rsync.server":
 			if rvalue != "" {
 				config.Server = strings.Split(rvalue, ",")
+				fmt.Println(config.Server)
 			}
 		case "rsync.rskipdir":
 			if rvalue != "" {

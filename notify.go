@@ -92,6 +92,8 @@ type Watcher struct {
 	Error       chan error      "错误通道"
 	done        chan bool       "当监控事件关闭时,发送退出信息到此通道"
 	isClose     bool            "判断是否已关闭"
+	skipDir     map[string]int  "不监控的目录"
+	skipExt     map[string]int  "不监控的文件后缀"
 }
 
 func NewWatcher() (w *Watcher, err error) {
@@ -107,6 +109,8 @@ func NewWatcher() (w *Watcher, err error) {
 		handleEvent: make(chan *FileEvent),
 		Error:       make(chan error),
 		done:        make(chan bool),
+		skipDir:     make(map[string]int),
+		skipExt:     make(map[string]int),
 		isClose:     false,
 	}
 
@@ -116,8 +120,18 @@ func NewWatcher() (w *Watcher, err error) {
 	return watcher, nil
 }
 
-func (w *Watcher) PrintMap() {
-	for a, b := range w.wm.watcher {
+func (w *Watcher) setSkipDir(skipDir map[string]int) {
+	w.skipDir = skipDir
+	fmt.Println(w.skipDir)
+}
+
+func (w *Watcher) setSkipExt(skipExt map[string]int) {
+	w.skipExt = skipExt
+	fmt.Println(w.skipExt)
+}
+
+func PrintMap(m map[string]int) {
+	for a, b := range m {
 		fmt.Println(a, "->", b)
 	}
 }
@@ -130,8 +144,19 @@ func (w *Watcher) Watch(path string, flags uint32) error {
 	}
 	//如果起始监控的是目录,则监控所有的目录
 	if f.IsDir() {
+		//判断是否是需要过滤的监控的目录
+		// if _, found := w.skipDir[path]; found {
+		// 	fmt.Println("过滤目录:", path)
+		// 	return nil
+		// }
+
 		err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 			if info.IsDir() {
+				//判断是否是需要过滤的监控的目录
+				if _, found := w.skipDir[path]; found {
+					fmt.Println("过滤目录:", path)
+					return nil
+				}
 				w.AddWatch(path, flags)
 			}
 			return nil
@@ -270,8 +295,13 @@ func (w *Watcher) readEvent() {
 				event.fileName = path + "/" + strings.TrimRight(string(bytes[0:raw.Len]), "\000")
 			}
 
-			//发送事件acceptEvent通道
-			w.acceptEvent <- event
+			if _, found := w.skipExt[filepath.Ext(event.fileName)]; !found {
+				fmt.Println("--->", w.skipExt, "--->", filepath.Ext(event.fileName), "--->", found)
+				//发送事件acceptEvent通道
+				w.acceptEvent <- event
+			} else {
+				fmt.Println("过滤文件:", event.fileName)
+			}
 
 			offset += syscall.SizeofInotifyEvent + raw.Len
 		}
