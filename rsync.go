@@ -20,7 +20,6 @@ func runSync() {
 		params = append(params, "--password-file="+conf.Password_file)
 		params = append(params, e.fileName)
 		var out bytes.Buffer
-		fmt.Println("exec command rsync:", out.String())
 		for _, server := range conf.Server {
 			cmd := exec.Command("/bin/sh", "-c", strings.Join(params, " ")+" "+conf.User+"@"+strings.TrimSpace(server))
 			fmt.Println(cmd.Args)
