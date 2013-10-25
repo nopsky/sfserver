@@ -3,6 +3,7 @@ package sfserver
 import (
 	"fmt"
 	"log"
+	"os"
 )
 
 var conf *Config = NewConfig()
@@ -17,6 +18,7 @@ func Run() {
 
 	w, err := NewWatcher()
 	if err != nil {
+		errLog("初始化notify失败")
 		log.Fatal(err)
 	}
 
@@ -25,7 +27,6 @@ func Run() {
 	fmt.Println("监控目录为:", conf.Path)
 
 	//设置过滤的目录
-	fmt.Printf("dir:%v --- ext:%v\n", conf.Skipdir, conf.Skipext)
 	w.setSkipDir(conf.Skipdir)
 
 	//设置过滤的后缀
@@ -39,8 +40,14 @@ func Run() {
 
 	runSync()
 
-	PrintMap(w.skipDir)
-	PrintMap(w.skipExt)
-	//w.PrintMap()
 	<-done
+}
+
+func errLog(msg string) {
+	fp, err := os.OpenFile(conf.Faillog, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm)
+	defer fp.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fp.WriteString(msg + "\n")
 }

@@ -16,6 +16,7 @@ type RsyncConfig struct {
 	Server        []string //rsync服务器
 	Rskipdir      []string
 	Rskipext      []string
+	Faillog       string //失败的日志文件
 }
 
 type Config struct {
@@ -23,8 +24,6 @@ type Config struct {
 	Flags   uint32         //监控的事件
 	Skipdir map[string]int //指定不需要监控的目录
 	Skipext map[string]int //指定不需要监控的文件后缀
-	Faillog string         //失败的日志文件
-
 	RsyncConfig
 }
 
@@ -41,7 +40,6 @@ func NewConfig() *Config {
 	//读取配置参数
 	fmt.Println("读取基本参数")
 	for key, value := range file["global"] {
-		//fmt.Println(key, "-->", value)
 		switch key {
 		case "path":
 			if value != "" {
@@ -72,7 +70,6 @@ func NewConfig() *Config {
 			if value != "" {
 				skipdir := strings.Split(value, ",")
 				for _, dir := range skipdir {
-					fmt.Println("=====>", strings.TrimSpace(dir), "<======")
 					config.Skipdir[strings.TrimSpace(dir)] = 1
 				}
 			}
@@ -94,7 +91,6 @@ func NewConfig() *Config {
 	fmt.Println("开始读取rsync的配置")
 	//读取rsync相关的参数
 	for rkey, rvalue := range file["rsync"] {
-		//fmt.Println(rkey, "-->", rvalue)
 		switch rkey {
 		case "rsync.bin":
 			if rvalue != "" {
@@ -115,7 +111,6 @@ func NewConfig() *Config {
 		case "rsync.server":
 			if rvalue != "" {
 				config.Server = strings.Split(rvalue, ",")
-				fmt.Println(config.Server)
 			}
 		case "rsync.rskipdir":
 			if rvalue != "" {

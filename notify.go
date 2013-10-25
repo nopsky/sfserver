@@ -144,12 +144,6 @@ func (w *Watcher) Watch(path string, flags uint32) error {
 	}
 	//如果起始监控的是目录,则监控所有的目录
 	if f.IsDir() {
-		//判断是否是需要过滤的监控的目录
-		// if _, found := w.skipDir[path]; found {
-		// 	fmt.Println("过滤目录:", path)
-		// 	return nil
-		// }
-
 		err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 			if info.IsDir() {
 				//判断是否是需要过滤的监控的目录
@@ -311,73 +305,66 @@ func (w *Watcher) readEvent() {
 func (w *Watcher) purgeEvents() {
 	for event := range w.acceptEvent {
 
-		if (event.mask & sys_IN_OPEN) == sys_IN_OPEN {
-			fmt.Println("sys_IN_OPEN is use")
-		}
-
-		if (event.mask & sys_IN_MOVE_SELF) == sys_IN_MOVE_SELF {
-			fmt.Println("sys_IN_MOVE_SELF is use")
-		}
-
-		if (event.mask & sys_IN_MOVED_TO) == sys_IN_MOVED_TO {
-			fmt.Println("sys_IN_MOVED_TO is use")
-		}
-
-		if (event.mask & sys_IN_MOVED_FROM) == sys_IN_MOVED_FROM {
-			fmt.Println("sys_IN_MOVED_FROM is use")
-		}
-
-		if (event.mask & sys_IN_ACCESS) == sys_IN_ACCESS {
-			fmt.Println("sys_in_access is use")
-		}
-
-		if (event.mask & sys_IN_ALL_EVENTS) == sys_IN_ALL_EVENTS {
-			fmt.Println("sys_IN_ALL_EVENTS is use")
-		}
-
-		if (event.mask & sys_IN_ATTRIB) == sys_IN_ATTRIB {
-			fmt.Println("sys_IN_ATTRIB is use")
-		}
-
-		if (event.mask & sys_IN_CLOSE) == sys_IN_CLOSE {
-			fmt.Println("sys_IN_CLOSE is use")
-		}
-
-		// if (event.mask & sys_IN_CLOSE_NOWRITE) == sys_IN_CLOSE_NOWRITE {
-		// 	fmt.Println("sys_IN_CLOSE_NOWRITE is use")
+		// if (event.mask & sys_IN_OPEN) == sys_IN_OPEN {
+		// 	fmt.Println("sys_IN_OPEN is use")
 		// }
 
-		if (event.mask & sys_IN_CLOSE_WRITE) == sys_IN_CLOSE_WRITE {
-			fmt.Println("sys_IN_CLOSE_WRITE is use")
-		}
+		// if (event.mask & sys_IN_MOVE_SELF) == sys_IN_MOVE_SELF {
+		// 	fmt.Println("sys_IN_MOVE_SELF is use")
+		// }
 
-		if (event.mask & sys_IN_CREATE) == sys_IN_CREATE {
-			fmt.Println("sys_IN_CREATE is use")
-		}
+		// if (event.mask & sys_IN_MOVED_TO) == sys_IN_MOVED_TO {
+		// 	fmt.Println("sys_IN_MOVED_TO is use")
+		// }
 
-		if (event.mask & sys_IN_DELETE) == sys_IN_DELETE {
-			fmt.Println("sys_IN_DELETE is use")
-		}
+		// if (event.mask & sys_IN_MOVED_FROM) == sys_IN_MOVED_FROM {
+		// 	fmt.Println("sys_IN_MOVED_FROM is use")
+		// }
 
-		if (event.mask & sys_IN_DELETE_SELF) == sys_IN_DELETE_SELF {
-			fmt.Println("sys_IN_DELETE_SELF is use")
-		}
+		// if (event.mask & sys_IN_ACCESS) == sys_IN_ACCESS {
+		// 	fmt.Println("sys_in_access is use")
+		// }
 
-		if (event.mask & sys_IN_MODIFY) == sys_IN_MODIFY {
-			fmt.Println("sys_IN_MODIFY is use")
-		}
+		// if (event.mask & sys_IN_ALL_EVENTS) == sys_IN_ALL_EVENTS {
+		// 	fmt.Println("sys_IN_ALL_EVENTS is use")
+		// }
 
-		if (event.mask & sys_IN_MOVE) == sys_IN_MOVE {
-			fmt.Println("sys_IN_MOVE is use")
-		}
+		// if (event.mask & sys_IN_ATTRIB) == sys_IN_ATTRIB {
+		// 	fmt.Println("sys_IN_ATTRIB is use")
+		// }
+
+		// if (event.mask & sys_IN_CLOSE) == sys_IN_CLOSE {
+		// 	fmt.Println("sys_IN_CLOSE is use")
+		// }
+
+		// if (event.mask & sys_IN_CLOSE_WRITE) == sys_IN_CLOSE_WRITE {
+		// 	fmt.Println("sys_IN_CLOSE_WRITE is use")
+		// }
+
+		// if (event.mask & sys_IN_CREATE) == sys_IN_CREATE {
+		// 	fmt.Println("sys_IN_CREATE is use")
+		// }
+
+		// if (event.mask & sys_IN_DELETE) == sys_IN_DELETE {
+		// 	fmt.Println("sys_IN_DELETE is use")
+		// }
+
+		// if (event.mask & sys_IN_DELETE_SELF) == sys_IN_DELETE_SELF {
+		// 	fmt.Println("sys_IN_DELETE_SELF is use")
+		// }
+
+		// if (event.mask & sys_IN_MODIFY) == sys_IN_MODIFY {
+		// 	fmt.Println("sys_IN_MODIFY is use")
+		// }
+
+		// if (event.mask & sys_IN_MOVE) == sys_IN_MOVE {
+		// 	fmt.Println("sys_IN_MOVE is use")
+		// }
 		sendEvent := false
 		switch {
 		case event.IsCreate():
 			if (event.mask & sys_IN_ISDIR) == sys_IN_ISDIR {
 				w.Watch(event.fileName, sys_IN_ALL_EVENTS)
-				fmt.Println("create a dir ", event.fileName)
-			} else {
-				fmt.Println("create a file ", event.fileName)
 			}
 			sendEvent = true
 		case event.IsDelete():
@@ -386,23 +373,15 @@ func (w *Watcher) purgeEvents() {
 				pathlen := len(event.fileName) - len(filepath.Base(event.fileName))
 				event.fileName = event.fileName[0:pathlen]
 			}
-			fmt.Println("is delete ", event.fileName)
 			event.fileName = filepath.Dir(event.fileName) + "/"
 			sendEvent = true
 		case event.IsModify():
-			fmt.Println("is modify ", event.fileName)
-
 			sendEvent = true
 		case event.IsRename():
-			fmt.Println("is rename ", event.fileName)
 			sendEvent = true
 		}
-
 		if sendEvent {
 			syncEvent <- event
 		}
-
-		//rsync -avz --password-file=/home/rsync.ps /work/golang/test/ nopsky@11.11.11.12::backup
-
 	}
 }

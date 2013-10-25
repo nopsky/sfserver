@@ -27,6 +27,7 @@ func runSync() {
 			cmd.Stdout = &out
 			err := cmd.Run()
 			if err != nil {
+				errLog(fmt.Sprintf("%s", cmd.Args))
 				log.Fatal(err.Error())
 			}
 			fmt.Println("exec command rsync:", out.String())
